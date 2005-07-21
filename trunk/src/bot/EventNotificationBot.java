@@ -20,7 +20,7 @@ import bot.util.IrcUtil;
 
 /**
  * 
- * @author y2uk
+ * @author Ulrich Krömer
  *
  * This class extends the PircBot irc bot, which represents a fully functional irc bot.
  * This extending class overloads all event methods and enables features to register themselves
@@ -30,6 +30,14 @@ import bot.util.IrcUtil;
  * features have to implement one of the supported event interfaces (located in bot.listener), which
  * extend the BotListener base interface and implement event handling functions for some of the
  * provided functions.
+ * if no listeners are registered for some common behaviour which every irc bot has to 
+ * support (like responding to a server ping) the bot takes the necessary measures to
+ * work properly. this works only if no listeners are registered for the specific request,
+ * at the moment a listener registers its his responsibility to respond properly. the default
+ * implementations of the interfaces fullfill that demand by responding in the same way as
+ * the bot would do.
+ * @author Ulrich Krömer
+ * 
  */
 public class EventNotificationBot extends PircBot {
 	

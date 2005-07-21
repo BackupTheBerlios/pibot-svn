@@ -5,6 +5,12 @@ import java.io.IOException;
 import org.jibble.pircbot.IrcException;
 import org.jibble.pircbot.NickAlreadyInUseException;
 
+/**
+ * instantiates a BotConfiguration object and a Bot object and 
+ * starts the bot by connecting it to the specified irc server.
+ * @author Ulrich Krömer
+ *
+ */
 public class Application {
 
 	public static void main(String[] args) {

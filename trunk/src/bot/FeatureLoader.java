@@ -12,6 +12,17 @@ import java.util.Set;
 
 import bot.listener.BotListener;
 
+/**
+ * Dynamically loads and registerse features, that implement at least one of the supported 
+ * interfaces of the bot that is supplied in the constructor.
+ * Those features are loaded from the specified feature directory and afterwards registered
+ * with the bot to which the feature loader is associated.
+ * The FeatureLoader also resolves dependencies between various features, each feature is
+ * able to specify on which other features it depends and which therefore have to exist as
+ * well in order for the specific feature to work properly.
+ * @author Ulrich Krömer
+ *
+ */
 public class FeatureLoader {
 
 	// directory settings
@@ -20,10 +31,10 @@ public class FeatureLoader {
  
 	private Set<Class> knownListenerInterfaces = new HashSet<Class>();
 	
-	private Map<Class, BotListener> registeredFeatures = new HashMap<Class, BotListener>();
-	private Map<Class, List<Class>> dependencies = new HashMap<Class, List<Class>>();
+	private Map<Class<? extends BotListener> , BotListener> registeredFeatures = new HashMap<Class<? extends BotListener>, BotListener>();
+	private Map<Class<? extends BotListener>, List<Class<? extends BotListener>>> dependencies = new HashMap<Class<? extends BotListener>, List<Class<? extends BotListener>>>();
 	
-	private List<Class> uninitializedFeatures = new ArrayList<Class>();
+	private List<Class<? extends BotListener>> uninitializedFeatures = new ArrayList<Class<? extends BotListener>>();
 
 	private EventNotificationBot bot;
 
@@ -67,12 +78,14 @@ public class FeatureLoader {
 	}
 	
 	/**
-	 * 
-	 * @return
+	 * returns a list of names of all the features that are currently registered
+	 * with the bot. those list is needed for being able to determine at runtime
+	 * the number and type of the features that are already loaded.
+	 * @return a list with the names of all already registered features
 	 */
 	public List<String> getRegisteredFeatures() {
 		List<String> features = new ArrayList<String>();
-		for (Class cls : registeredFeatures.keySet()) {
+		for (Class<? extends BotListener> cls : registeredFeatures.keySet()) {
 			features.add(cls.getSimpleName());
 		}
 		return features;
@@ -99,31 +112,36 @@ public class FeatureLoader {
 	}
 	
 	/**
-	 * 
-	 * @param path
-	 * @return
+	 * parses a given directory for all .class files. (ie tests for files
+	 * ending with .class). returns a list of the fully qualified class names
+	 * ready to be instantiated by a class loader.
+	 * @param path the directory that should be parsed.
+	 * @return a list of fully qualified class names that are in the specified directory.
 	 */
 	private List<String> parseDirectory(String path) {
-		List<String> featureNames = new ArrayList<String>();
+		List<String> classNames = new ArrayList<String>();
 
 		File featureDir = new File(BASE_DIR + path);
 		File[] files = featureDir.listFiles();
 		if (files == null)
-			return null;
+			return classNames;
 		for (File file : files) {
 			String fileName = file.getName();
 			if (fileName.endsWith(".class")) {
 				String className = fileName.replaceAll(".class", "");
 				className = path + "." + className;
-				featureNames.add(className);
+				classNames.add(className);
 			}
 		}
-		return featureNames;
+		return classNames;
 	}
 	
 	/**
-	 * 
-	 * @param features
+	 * registers all features of the feature list by iterating
+	 * over all features and calling registerFeature on each
+	 * feature. the entries in the feature list are the names
+	 * of the features
+	 * @param features the list of feature names.
 	 */
 	private void registerAllFeatures(List<String> features) {
 		for (String feature : features) {
@@ -132,18 +150,24 @@ public class FeatureLoader {
 	}
 	
 	/**
-	 * 
-	 * @param listenerName
+	 * registers the listener with the given name. this means that
+	 * each feature first gets instantiated, afterwards they are inserted
+	 * into the map that contains all currently registered features. if 
+	 * the feature is already registered and loaded it gets reloaded, to 
+	 * enable deploying a new version of a feature without stopping the bot.
+	 * finally the dependencies for each feature are determined by calling 
+	 * the registerDependencies method.
+	 * if an exception is thrown nothing is done because that only means that
+	 * the class does not implement the interface and therefore nothing is done
+	 * afterwards with the class anyway.
+	 * @param listenerName the name of the listener that should be registered
 	 */
 	private void registerFeature(String listenerName) {
 		try {
 			Class cls = Class.forName(listenerName);
 			BotListener listener = (BotListener) cls.newInstance();
-
-			if (registeredFeatures.containsKey(cls))
-				return;
 			
-			registeredFeatures.put(cls, listener);
+			registeredFeatures.put((Class<? extends BotListener>)cls, listener);
 			registerDependencies(listener);
 			
 		} catch (Exception e) {
@@ -154,13 +178,16 @@ public class FeatureLoader {
 	}
 	
 	/**
-	 * 
-	 * @param listener
+	 * registers the dependencies for a supplied listener.
+	 * each listener specifies on which other features it dependencies
+	 * by returning a list of dependencies as the return value of the 
+	 * getDependencies method.
+	 * @param listener the listener for which the dependencies need to be resolved
 	 */
 	private void registerDependencies(BotListener listener) {
-		for (Class cls : listener.getDependencies()) {
+		for (Class<? extends BotListener> cls : listener.getDependencies()) {
 			if(!dependencies.containsKey(cls)) {
-				List<Class> depList = new ArrayList<Class>();
+				List<Class<? extends BotListener>> depList = new ArrayList<Class<? extends BotListener>>();
 				depList.add(listener.getClass());
 				dependencies.put(cls, depList);
 			}
@@ -171,8 +198,8 @@ public class FeatureLoader {
 	}
 	
 	/**
-	 * 
-	 *
+	 * resolves the dependencies for each listener by calling the
+	 * resolveDependenciesForClass method on each feature.
 	 */
 	private void resolveDependencies() {	
 		for (Class<? extends BotListener> cls : dependencies.keySet())
@@ -180,13 +207,23 @@ public class FeatureLoader {
 	}
 	
 	/**
-	 * 
-	 * @param cls
+	 * resolves the dependencies for a given class. this means that first the 
+	 * class is looked up and then for each dependent class the object of the current
+	 * class is provided as parameter for a setter method that has to exist in order
+	 * to being able to resolve the dependency (by using dependency injection each 
+	 * feature does not have to know at instantiation time which feature object really
+	 * gets associated with the class.
+	 * if the current feature does not exist at all, all classed that depend on this feature
+	 * are added to the list of not properly initialized features which are then cleaned up 
+	 * after initialization of the rest of the features succeeded. if a feature in the list
+	 * of dependent classes does not provide the necessary setter method it is also added
+	 * to that list and cleaned up later (which means that the feature wont work)
+	 * @param cls the class for which the dependencies should be resolved.
 	 */
 	private void resolveDependenciesForClass(Class<? extends BotListener> cls) {
 		BotListener curListener = registeredFeatures.get(cls);
 		if(curListener != null) {
-			for (Class curClass : dependencies.get(cls)) {
+			for (Class<? extends BotListener> curClass : dependencies.get(cls)) {
 				BotListener listener = registeredFeatures.get(curClass);
 				try {
 					invokeMethod(listener, "set" + cls.getSimpleName(), cls, curListener);
@@ -199,7 +236,7 @@ public class FeatureLoader {
 			}
 		}
 		else {
-			for (Class curClass : dependencies.get(cls)) {
+			for (Class<? extends BotListener> curClass : dependencies.get(cls)) {
 				System.out.println("failed to initialize plugin: " + curClass.getSimpleName());
 				// TODO: insert logging
 				uninitializedFeatures.add(curClass);
@@ -208,18 +245,26 @@ public class FeatureLoader {
 	}
 	
 	/**
-	 * 
-	 *
+	 * removes all features that could not be initialized properly from the list of features.
+	 * this means that those features are not availible however if all features are reloaded
+	 * and the missing dependency exists afterwards the feature is instantiated again and 
+	 * gets initialized. 
 	 */
 	private void removeUninitalizedFeatures() {
-		for (Class cls : uninitializedFeatures)
+		for (Class<? extends BotListener> cls : uninitializedFeatures)
 			registeredFeatures.remove(cls);
 		uninitializedFeatures.clear();
 	}
 
 	/**
-	 * 
-	 *
+	 * initializes the list of features that remain after features that were not initialized
+	 * properly have been removed from the feature list. initializing means that for each
+	 * listener the setBot method is called with the current bot object and that the listeners
+	 * are registered with the bot by determining all interfaces that the listener implements.
+	 * this is done by calling the handleInterfaces method on each listener.
+	 * if an exception occurs inside the handleInterfaces method this means that the bot does
+	 * not provide the necessary setter method that it promised to provide when determining
+	 * the supported interfaces.
 	 */
 	private void initializeFeatures() {
 		for (BotListener listener : registeredFeatures.values()) {
@@ -230,7 +275,7 @@ public class FeatureLoader {
 			catch(Exception ex) {
 				// should not happen as all known interfaces have appropriate 
 				// methods in the class; if it happens the bot class has to
-				// be updated or the known interfaces collection is false
+				// be updated
 				System.out.println("an interface is missing");
 				// TODO: insert logging
 			}
@@ -238,37 +283,43 @@ public class FeatureLoader {
 	}
 	
 	/**
-	 * 
-	 * @param cls
-	 * @param listener
-	 * @param methodName
-	 * @throws NoSuchMethodException
-	 * @throws IllegalAccessException
-	 * @throws InvocationTargetException
+	 * handles all interfaces that the supplied class supports and calls the associated
+	 * method on the bot. this means it registers the provided listener object with the bot
+	 * object.
+	 * @param cls the class for which all supported interfaces should be determined and 
+	 * associated with the bot
+	 * @param listener the listener which has to be registered with the bot and therefore
+	 * needs to be provided to the invokeMethod method
+	 * @param methodPrefix the prefix of the methods that should be called
+	 * @throws NoSuchMethodException if the method does not exist
+	 * @throws IllegalAccessException if the method does not provide the necessary (public) access rights
+	 * @throws InvocationTargetException if the target of the invocation does not exist
 	 */
 	private void handleInterfaces(Class<? extends BotListener> cls, BotListener listener,
-			String methodName) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+			String methodPrefix) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
 		
 		Class[] interfaces = cls.getInterfaces();
 		for (Class curClass : interfaces) {
 			if (knownListenerInterfaces.contains(curClass)) {
 				StringBuffer name = new StringBuffer(curClass
 						.getSimpleName());
-				name.insert(0, methodName);
+				name.insert(0, methodPrefix);
 				invokeMethod(bot, name.toString(), curClass, listener);
 			}
 		}
 	}
 	
 	/**
-	 * 
-	 * @param receiver
-	 * @param methodName
-	 * @param parameterType
-	 * @param argument
-	 * @throws NoSuchMethodException
-	 * @throws IllegalAccessException
-	 * @throws InvocationTargetException
+	 * inovkes a method one parameter on a specified object. 
+	 * the method is supplied as argument "methodName", the formal parameter type is
+	 * supported as "parameteType" and the the actual parameter objects as "argument"
+	 * @param receiver the object on which the method should be called
+	 * @param methodName the name of the method that should be called
+	 * @param parameterType the type of the formal parameter of the method
+	 * @param argument the acutal parameter to the method
+	 * @throws NoSuchMethodException if the method does not exist
+	 * @throws IllegalAccessException if the access rights of the method are to strong to be called
+	 * @throws InvocationTargetException if the target of the invocation does not exist
 	 */
 	private void invokeMethod(Object receiver, String methodName, Class parameterType,
 			Object argument) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
@@ -282,9 +333,10 @@ public class FeatureLoader {
 		meth.invoke(receiver, argList);
 	}
 
+	// TODO: continue development
 	/**
-	 * 
-	 *
+	 * unloads all features.
+	 * unloading is done by parsing the directory 
 	 */
 	public void unload() {
 		List<String> featureNames = parseDirectory(featureDir);
@@ -302,7 +354,7 @@ public class FeatureLoader {
 			Class cls = Class.forName(listenerName);
 			BotListener listener = (BotListener) cls.newInstance();
 
-			registeredFeatures.remove(cls);
+			registeredFeatures.remove((Class<? extends BotListener>)cls);
 
 			handleInterfaces((Class<? extends BotListener>)cls, listener, "remove");
 

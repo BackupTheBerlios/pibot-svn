@@ -1,13 +1,20 @@
 package bot;
 
+/**
+ * implements a configuration for a bot.
+ * supplies a default configuration
+ * @author Ulrich Krömer
+ *
+ */
 public class BotConfiguration {
 
+	private String configFile;
+	
 	private String channel;
 	private String ircServer;
 	private String ircNick;
 	private String version;
 	private String ircName;
-	private String configFile;
 	private boolean verbose;
 	private String featureDirectory;
 	
@@ -19,7 +26,6 @@ public class BotConfiguration {
 		ircName = "PiBot";
 		featureDirectory = "feature";
 		verbose = true;
-		
 	}
 	
 	public void SetConfigFile(String path) {
