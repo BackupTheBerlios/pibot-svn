@@ -3,6 +3,7 @@ package feature;
 import java.io.IOException;
 
 import feature.util.bible.WordReader;
+import feature.util.common.MessageFeature;
 
 import bot.listener.MessageListener;
 
@@ -19,7 +20,7 @@ public class BibleFeature extends MessageFeature implements MessageListener {
 	}
 
 	@Override
-	public MessageType getType() {
+	protected MessageType getType() {
 		return MessageType.publicMessage;
 	}
 

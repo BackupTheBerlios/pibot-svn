@@ -1,12 +1,13 @@
 package feature;
 
+import feature.util.common.MessageFeature;
 import bot.listener.MessageListener;
 
 public class BotControllerFeature extends MessageFeature implements
 		MessageListener {
 
 	@Override
-	public MessageType getType() {
+	protected MessageType getType() {
 		return MessageType.privateMessage;
 	}
 
@@ -19,10 +20,10 @@ public class BotControllerFeature extends MessageFeature implements
 	public void execute(String sender, String messageArgs) {
 		if(messageArgs.equals("reload")) {
 			bot.getFeatureLoader().load();
-			bot.sendMessage(sender, "features reloaded");
+			bot.sendMessage(sender, "features reloaded...");
 		}
 		else if(messageArgs.equals("list")) {
-			StringBuffer features = new StringBuffer();
+			StringBuffer features = new StringBuffer("currently loaded features: ");
 			for (String featureName : bot.getFeatureLoader().getRegisteredFeatures()) {
 				features.append(featureName);
 				features.append(" ");

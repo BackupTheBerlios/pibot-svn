@@ -1,5 +1,6 @@
 package feature;
 
+import feature.util.common.MessageFeature;
 import bot.listener.MessageListener;
 
 
@@ -21,7 +22,7 @@ public class PartFeature extends MessageFeature implements MessageListener {
 	}
 
 	@Override
-	public MessageType getType() {
+	protected MessageType getType() {
 		return MessageType.privateMessage;
 	}
 

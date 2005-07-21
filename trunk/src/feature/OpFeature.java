@@ -26,7 +26,6 @@ public class OpFeature extends ChannelEventListenerImpl implements ChannelEventL
 		return knownUser;
 	}
 
-
 	public List<User> getMasters() {
 		return masters;
 	}

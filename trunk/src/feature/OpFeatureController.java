@@ -1,5 +1,6 @@
 package feature;
 
+import feature.util.common.MessageFeature;
 import bot.listener.MessageListener;
 
 public class OpFeatureController extends MessageFeature implements
@@ -16,7 +17,7 @@ public class OpFeatureController extends MessageFeature implements
 	}
 	
 	@Override
-	public MessageType getType() {
+	protected MessageType getType() {
 		return MessageType.privateMessage;
 	}
 

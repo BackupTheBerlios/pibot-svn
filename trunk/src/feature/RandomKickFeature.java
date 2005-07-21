@@ -3,6 +3,8 @@ package feature;
 import java.util.List;
 import java.util.Random;
 
+import feature.util.common.MessageFeature;
+
 import bot.listener.MessageListener;
 import bot.util.IrcUtil;
 import bot.util.User;
@@ -33,7 +35,7 @@ public class RandomKickFeature extends MessageFeature implements MessageListener
 	
 
 	@Override
-	public MessageType getType() {
+	protected MessageType getType() {
 		return MessageType.publicMessage;
 	}
 

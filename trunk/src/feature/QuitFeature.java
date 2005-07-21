@@ -1,5 +1,6 @@
 package feature;
 
+import feature.util.common.MessageFeature;
 import bot.listener.MessageListener;
 
 
@@ -14,7 +15,7 @@ public class QuitFeature extends MessageFeature implements MessageListener {
 		return "!quit";
 	}
 
-	public MessageType getType() {
+	protected MessageType getType() {
 		return MessageType.privateMessage;
 	}
 

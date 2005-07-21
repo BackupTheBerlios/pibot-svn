@@ -1,5 +1,6 @@
 package feature;
 
+import feature.util.common.MessageFeature;
 import bot.listener.MessageListener;
 
 
@@ -13,7 +14,7 @@ public class JoinFeature extends MessageFeature implements MessageListener {
 		return "!join";
 	}
 	
-	public MessageType getType() {
+	protected MessageType getType() {
 		return MessageType.privateMessage;
 	}
 }
