@@ -5,21 +5,33 @@ import org.jibble.pircbot.DccFileTransfer;
 
 import bot.listener.DccListener;
 
+/**
+ * default implementation for the DccListener interface.
+ * provides empty method subs for each method that may be overridden if necessary.
+ * @author Ulrich Krömer
+ *
+ */
 public class DccListenerImpl extends BotListenerImpl implements DccListener {
 
+	/**
+	 * default implementation does nothing.
+	 */
 	public void onFileTransferFinsihed(DccFileTransfer transfer, Exception e) {
-		// TODO Auto-generated method stub
-
+		// nothing to be done, override in derived classes if necessary
 	}
 
+	/**
+	 * default implementation does nothing.
+	 */
 	public void onIncomingChatRequest(DccChat chat) {
-		// TODO Auto-generated method stub
-
+		// nothing to be done, override in derived classes if necessary
 	}
 
+	/**
+	 * default implementation does nothing.
+	 */
 	public void onIncomingFileTransfer(DccFileTransfer transfer) {
-		// TODO Auto-generated method stub
-
+		// nothing to be done, override in derived classes if necessary
 	}
 
 }

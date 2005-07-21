@@ -6,53 +6,50 @@ package bot.listener.impl;
 import bot.listener.ChannelEventListener;
 
 /**
- * @author y2uk
- *
+ * the default implementation for the ChannelEventListenerInterface
+ * consists only of empty method stubs, which may be overridden if necessary
+ * @author Ulrich Krömer
+ * 
  */
 public class ChannelEventListenerImpl extends BotListenerImpl implements ChannelEventListener {
 
-	/* (non-Javadoc)
-	 * @see bot.listener.ChannelEventListener#onJoin(java.lang.String, java.lang.String, java.lang.String, java.lang.String)
+	/**
+	 * default implementation does nothing.
 	 */
 	public void onJoin(String channel, String sender, String login,
 			String hostname) {
-		// TODO Auto-generated method stub
-
+		// nothing to be done, override in derived classes if necessary
 	}
 
-	/* (non-Javadoc)
-	 * @see bot.listener.ChannelEventListener#onKick(java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String)
+	/**
+	 * default implementation does nothing.
 	 */
 	public void onKick(String channel, String kickerNick, String kickerLogin,
 			String kickerHostname, String recipientNick, String reason) {
-		// TODO Auto-generated method stub
-
+		// nothing to be done, override in derived classes if necessary
 	}
 
-	/* (non-Javadoc)
-	 * @see bot.listener.ChannelEventListener#onPart(java.lang.String, java.lang.String, java.lang.String, java.lang.String)
+	/**
+	 * default implementation does nothing.
 	 */
 	public void onPart(String channel, String sender, String login,
 			String hostname) {
-		// TODO Auto-generated method stub
-
+		// nothing to be done, override in derived classes if necessary
 	}
 
-	/* (non-Javadoc)
-	 * @see bot.listener.ChannelEventListener#onNickChange(java.lang.String, java.lang.String, java.lang.String, java.lang.String)
+	/**
+	 * default implementation does nothing.
 	 */
 	public void onNickChange(String oldNick, String login, String hostname,
 			String newNick) {
-		// TODO Auto-generated method stub
-
+		// nothing to be done, override in derived classes if necessary
 	}
 
-	/* (non-Javadoc)
-	 * @see bot.listener.ChannelEventListener#onQuit(java.lang.String, java.lang.String, java.lang.String, java.lang.String)
+	/**
+	 * default implementation does nothing.
 	 */
 	public void onQuit(String sourceNick, String sourceLogin,
 			String sourceHostname, String reason) {
-		// TODO Auto-generated method stub
-
+		// nothing to be done, override in derived classes if necessary
 	}
 }
