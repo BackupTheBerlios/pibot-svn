@@ -9,8 +9,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import bot.listener.BotListener;
+import bot.logging.Logging;
 
 /**
  * Dynamically loads and registerse features, that implement at least one of the supported 
@@ -27,6 +29,8 @@ public class FeatureLoader {
 
 	// directory settings
 	private static final String BASE_DIR = "bin\\";
+
+	private Logger logger = Logging.getBotLogger();
 	private String featureDir;
  
 	private Set<Class> knownListenerInterfaces = new HashSet<Class>();
@@ -70,8 +74,7 @@ public class FeatureLoader {
 				catch(Exception ex) {
 					// should not happen, if the method is declared the interface
 					// should be there in compiled form
-					System.out.println("an error occcured while adding the accepted interfaces");
-					// TODO: insert logging
+					logger.severe("an error occcured while adding the accepted interfaces");
 				}
 			}
 		}
@@ -109,6 +112,7 @@ public class FeatureLoader {
 		removeUninitalizedFeatures();
 			
 		initializeFeatures();
+		logger.info("successfully loaded features");
 	}
 	
 	/**
@@ -230,15 +234,13 @@ public class FeatureLoader {
 				}
 				catch(Exception e) {
 					uninitializedFeatures.add(listener.getClass());
-					// TODO: insert logging
-					System.out.println("failed to initialize plugin: " + listener.getClass());
+					logger.warning("failed to initialize plugin: " + listener.getClass());
 				}
 			}
 		}
 		else {
 			for (Class<? extends BotListener> curClass : dependencies.get(cls)) {
-				System.out.println("failed to initialize plugin: " + curClass.getSimpleName());
-				// TODO: insert logging
+				logger.warning("failed to initialize plugin: " + curClass.getSimpleName());
 				uninitializedFeatures.add(curClass);
 			}
 		}
@@ -265,6 +267,9 @@ public class FeatureLoader {
 	 * if an exception occurs inside the handleInterfaces method this means that the bot does
 	 * not provide the necessary setter method that it promised to provide when determining
 	 * the supported interfaces.
+	 * after initializing the features this method calls the onLoad method on each listener
+	 * to enable each feature to do custom initialization that has to be done after all dependencies
+	 * have been resolved (and which therefore can not be done inside the constructor)
 	 */
 	private void initializeFeatures() {
 		for (BotListener listener : registeredFeatures.values()) {
@@ -276,9 +281,11 @@ public class FeatureLoader {
 				// should not happen as all known interfaces have appropriate 
 				// methods in the class; if it happens the bot class has to
 				// be updated
-				System.out.println("an interface is missing");
-				// TODO: insert logging
+				logger.severe("an interface is not supported by the bot");
 			}
+		}
+		for(BotListener listener : registeredFeatures.values()) {
+			listener.onLoad();
 		}
 	}
 	
@@ -333,38 +340,28 @@ public class FeatureLoader {
 		meth.invoke(receiver, argList);
 	}
 
-	// TODO: continue development
 	/**
 	 * unloads all features.
-	 * unloading is done by parsing the directory 
+	 * before removing all features from the bot this method calls the onUnload method
+	 * for each feature to provide each feature with the possibility to perform necessary
+	 * clean up routines.
 	 */
 	public void unload() {
-		List<String> featureNames = parseDirectory(featureDir);
-		for (String feature : featureNames) {
-			unRegister(feature);
+		for(BotListener listener : registeredFeatures.values()) {
+			listener.onUnload();
 		}
-	}
-
-	/**
-	 * 
-	 * @param listenerName
-	 */
-	public void unRegister(String listenerName) {
 		try {
-			Class cls = Class.forName(listenerName);
-			BotListener listener = (BotListener) cls.newInstance();
-
-			registeredFeatures.remove((Class<? extends BotListener>)cls);
-
-			handleInterfaces((Class<? extends BotListener>)cls, listener, "remove");
-
-		} catch (Exception e) {
-			System.out.println(e.toString());
-			// TODO: handle exception
+			for(Class<? extends BotListener> cls : registeredFeatures.keySet()) {
+				handleInterfaces(cls, registeredFeatures.get(cls), "remove");
+			}
 		}
+		catch(Exception ex) {
+			// should not happen as all known interfaces have appropriate 
+			// methods in the class; if it happens the bot class has to
+			// be updated
+			logger.severe("an interface is not supported by the bot");
+		}
+		registeredFeatures.clear();
+		logger.info("successfully unloaded all features");
 	}
-
-
-
-
 }

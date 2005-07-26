@@ -3,6 +3,11 @@ package feature;
 import feature.util.common.MessageFeature;
 import bot.listener.MessageListener;
 
+/**
+ * 
+ * @author y2uk
+ *
+ */
 public class OpFeatureController extends MessageFeature implements
 		MessageListener {
 

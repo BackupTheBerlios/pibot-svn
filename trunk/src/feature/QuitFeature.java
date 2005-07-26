@@ -8,7 +8,6 @@ public class QuitFeature extends MessageFeature implements MessageListener {
 
 	public void execute(String sender, String messageArgs) {
 		bot.quitServer(messageArgs);
-		System.exit(0);
 	}
 
 	public String getTrigger() {

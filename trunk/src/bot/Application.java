@@ -1,9 +1,12 @@
 package bot;
 
 import java.io.IOException;
+import java.util.logging.Level;
 
 import org.jibble.pircbot.IrcException;
 import org.jibble.pircbot.NickAlreadyInUseException;
+
+import bot.logging.Logging;
 
 /**
  * instantiates a BotConfiguration object and a Bot object and 
@@ -14,6 +17,9 @@ import org.jibble.pircbot.NickAlreadyInUseException;
 public class Application {
 
 	public static void main(String[] args) {
+		
+		Logging.setLogLevel(Level.FINEST);
+		
 		BotConfiguration cfg = new BotConfiguration();
 		EventNotificationBot bot = new EventNotificationBot(cfg);
 		try {

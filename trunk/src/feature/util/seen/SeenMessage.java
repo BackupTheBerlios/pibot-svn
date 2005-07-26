@@ -1,10 +1,13 @@
 package feature.util.seen;
 
+import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class SeenMessage {
+public class SeenMessage implements Serializable {
 
+	private static final long serialVersionUID = 50000;
+	
 	private Date time;
 	private String message;
 	

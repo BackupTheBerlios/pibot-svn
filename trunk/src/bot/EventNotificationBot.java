@@ -41,6 +41,9 @@ import bot.util.IrcUtil;
  */
 public class EventNotificationBot extends PircBot {
 	
+	private FeatureLoader featureLoader;
+	private BotConfiguration configuration;
+	
 	/**
 	 * Constructor.
 	 * Initializes the bot with the configuration data.
@@ -60,8 +63,6 @@ public class EventNotificationBot extends PircBot {
 		featureLoader.load();
 	}
 	
-	private FeatureLoader featureLoader;
-	
 	/**
 	 * returns the feature loader of the bot.
 	 * maybe used to control the feature loader by registered features
@@ -71,7 +72,7 @@ public class EventNotificationBot extends PircBot {
 		return featureLoader;
 	}
 	
-	private BotConfiguration configuration;
+	
 	
 	/**
 	 * returns the configuration of the bot.
@@ -213,9 +214,13 @@ public class EventNotificationBot extends PircBot {
 
 	@Override
 	protected void onDisconnect() {
+		if(connectionListeners.size() == 0) {
+			featureLoader.unload();
+			System.exit(0);
+		}
 		for (ConnectionListener connectionListener : connectionListeners) {
 			connectionListener.onDisconnect();
-		}
+		}	
 	}
 
 	@Override

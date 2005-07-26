@@ -1,9 +1,12 @@
 package feature.util.tell;
 
+import java.io.Serializable;
 import java.util.Date;
 
-public class TellMessage {
+public class TellMessage implements Serializable {
 
+	private static final long serialVersionUID = 50001;
+	
 	private Date time;
 	private String sender;
 	private String message;

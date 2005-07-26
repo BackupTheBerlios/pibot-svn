@@ -2,17 +2,24 @@ package feature;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import feature.util.seen.SeenMessage;
+import java.util.logging.Logger;
 
 import bot.listener.ChannelEventListener;
 import bot.listener.MessageListener;
 import bot.listener.UserModeListener;
 import bot.listener.impl.MessageListenerImpl;
+import bot.logging.Logging;
+import feature.util.common.ByteStreamSerializer;
+import feature.util.common.Serializer;
+import feature.util.seen.SeenMessage;
 
 public class SeenFeature extends MessageListenerImpl implements
 		MessageListener, UserModeListener, ChannelEventListener {
 
+	private final Logger logger = Logging.getFeatureLogger(); 
+		
+	private static final String FILE_NAME = "seen.sav";
+	
 	private static final String DEOPEVENT = " setting mode -o on ";
 	private static final String DEVOICEEVENT = " setting mode -v on ";
 	private static final String OPEVENT = " setting mode +o on ";
@@ -26,7 +33,23 @@ public class SeenFeature extends MessageListenerImpl implements
 	private static final String MESSAGEEVENT = " saying ";
 	
 	private Map<String, SeenMessage> issuedEvents = new HashMap<String, SeenMessage>();
+	private Serializer serializer = new ByteStreamSerializer();
 	
+	public void onUnload() {
+		if(!serializer.serialize(issuedEvents, FILE_NAME)) {
+			logger.warning("seens could not be saved");	
+		}
+	}
+	
+	public void onLoad() {
+		Object obj = serializer.deserialize(FILE_NAME);
+		if(obj == null) {
+			logger.warning("seens could not be loaded");
+		}
+		else {
+			issuedEvents = (Map<String, SeenMessage>)obj;
+		}
+	}
 	
 	public void addEvent(String sender, String message) {
 		issuedEvents.put(sender, new SeenMessage(message));
